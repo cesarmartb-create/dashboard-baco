@@ -197,13 +197,13 @@ if not df_inv.empty:
         with cols_loc[i]:
             nd,nc = int(row['nota_des']),int(row['nota_cat'])
             nombre = NOMBRES.get(row['local'], row['local'])
-            st.markdown(f"""<div style="background:#0f1117;border:1px solid #1e2130;border-radius:8px;padding:.6rem .7rem;text-align:center">
-                <div style="font-size:10px;color:#6b7280">{row['local']}</div>
-                <div style="font-size:11px;font-weight:500;color:#f9fafb;margin-bottom:4px">{nombre[:10]}</div>
+            st.markdown(f"""<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:.6rem .7rem;text-align:center">
+                <div style="font-size:10px;color:#64748b">{row['local']}</div>
+                <div style="font-size:11px;font-weight:500;color:#0f172a;margin-bottom:4px">{nombre[:10]}</div>
                 <div style="font-size:13px;font-weight:600;color:{nota_color(nd)}">{row['des_pct']:.2f}%</div>
-                <div style="font-size:10px;color:#6b7280">des n{nd}</div>
+                <div style="font-size:10px;color:#64748b">des n{nd}</div>
                 <div style="font-size:13px;font-weight:600;color:{nota_color(nc)};margin-top:2px">{row['cat_pct']:.1f}%</div>
-                <div style="font-size:10px;color:#6b7280">cat n{nc}</div>
+                <div style="font-size:10px;color:#64748b">cat n{nc}</div>
             </div>""", unsafe_allow_html=True)
 
     if len(df_inv['fecha'].unique()) > 1:
@@ -216,10 +216,10 @@ if not df_inv.empty:
         fig_trend.add_trace(go.Scatter(x=df_trend['fecha'],y=df_trend['cat_pct'],name='Catálogo %',
             line=dict(color='#10b981',width=2,dash='dot'),mode='lines+markers'),secondary_y=True)
         fig_trend.add_hline(y=2.0,line_dash="dash",line_color="#f59e0b",annotation_text="Meta des. nota 4",secondary_y=False)
-        fig_trend.update_layout(height=260,paper_bgcolor='rgba(0,0,0,0)',plot_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='#9ca3af',size=11),legend=dict(orientation='h',y=1.1),
+        fig_trend.update_layout(height=260,paper_bgcolor='rgba(0,0,0,0)',plot_bgcolor='rgba(248,250,252,0.5)',
+            font=dict(color='#334155',size=11),legend=dict(orientation='h',y=1.1),
             margin=dict(t=30,b=20,l=40,r=40),
-            xaxis=dict(gridcolor='#1e2130'),yaxis=dict(gridcolor='#1e2130'))
+            xaxis=dict(gridcolor='#e2e8f0'),yaxis=dict(gridcolor='#e2e8f0'))
         st.plotly_chart(fig_trend, use_container_width=True)
     st.divider()
 
@@ -265,9 +265,9 @@ if not df_vta.empty:
     fig_vta = px.bar(vta_local,x='venta',y='nombre',orientation='h',
         color='ticket_prom',color_continuous_scale=['#1e3a5f','#3b82f6','#60a5fa'],
         labels={'venta':'Venta $','nombre':'Local','ticket_prom':'Ticket prom.'},height=320)
-    fig_vta.update_layout(paper_bgcolor='rgba(0,0,0,0)',plot_bgcolor='rgba(0,0,0,0)',
-        font=dict(color='#9ca3af',size=11),margin=dict(t=10,b=20,l=10,r=10),
-        xaxis=dict(gridcolor='#1e2130'),
+    fig_vta.update_layout(paper_bgcolor='rgba(0,0,0,0)',plot_bgcolor='rgba(248,250,252,0.5)',
+        font=dict(color='#334155',size=11),margin=dict(t=10,b=20,l=10,r=10),
+        xaxis=dict(gridcolor='#e2e8f0'),
         coloraxis_colorbar=dict(title='Ticket prom.',tickformat='$,.0f'))
     fig_vta.update_traces(texttemplate='$%{x:,.0f}',textposition='outside',textfont_size=10)
     st.plotly_chart(fig_vta,use_container_width=True)
@@ -277,9 +277,9 @@ if not df_vta.empty:
         df_v_trend['periodo_sem'] = df_v_trend['fecha'].astype(str)+' S'+df_v_trend['semana'].astype(str)
         fig_vt = px.line(df_v_trend,x='periodo_sem',y='venta',height=220,
             color_discrete_sequence=['#3b82f6'],labels={'venta':'Venta $','periodo_sem':'Semana'})
-        fig_vt.update_layout(paper_bgcolor='rgba(0,0,0,0)',plot_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='#9ca3af',size=11),margin=dict(t=10,b=20,l=40,r=20),
-            xaxis=dict(gridcolor='#1e2130',tickangle=45),yaxis=dict(gridcolor='#1e2130',tickformat='$,.0f'))
+        fig_vt.update_layout(paper_bgcolor='rgba(0,0,0,0)',plot_bgcolor='rgba(248,250,252,0.5)',
+            font=dict(color='#334155',size=11),margin=dict(t=10,b=20,l=40,r=20),
+            xaxis=dict(gridcolor='#e2e8f0',tickangle=45),yaxis=dict(gridcolor='#e2e8f0',tickformat='$,.0f'))
         st.plotly_chart(fig_vt,use_container_width=True)
     st.divider()
 
@@ -319,9 +319,9 @@ if not df_comp.empty:
     comp_local = comp_local.sort_values('monto',ascending=True)
     fig_comp = px.bar(comp_local,x='monto',y='nombre',orientation='h',
         color_discrete_sequence=['#7c3aed'],labels={'monto':'Compra $','nombre':'Local'},height=320)
-    fig_comp.update_layout(paper_bgcolor='rgba(0,0,0,0)',plot_bgcolor='rgba(0,0,0,0)',
-        font=dict(color='#9ca3af',size=11),margin=dict(t=10,b=20,l=10,r=10),
-        xaxis=dict(gridcolor='#1e2130'),showlegend=False)
+    fig_comp.update_layout(paper_bgcolor='rgba(0,0,0,0)',plot_bgcolor='rgba(248,250,252,0.5)',
+        font=dict(color='#334155',size=11),margin=dict(t=10,b=20,l=10,r=10),
+        xaxis=dict(gridcolor='#e2e8f0'),showlegend=False)
     fig_comp.update_traces(texttemplate='$%{x:,.0f}',textposition='outside',textfont_size=10)
     st.plotly_chart(fig_comp,use_container_width=True)
 
@@ -330,9 +330,9 @@ if not df_comp.empty:
         df_c_trend['periodo_sem'] = df_c_trend['fecha'].astype(str)+' S'+df_c_trend['Semana'].astype(str)
         fig_ct = px.line(df_c_trend,x='periodo_sem',y='monto',height=220,
             color_discrete_sequence=['#7c3aed'],labels={'monto':'Compra $','periodo_sem':'Semana'})
-        fig_ct.update_layout(paper_bgcolor='rgba(0,0,0,0)',plot_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='#9ca3af',size=11),margin=dict(t=10,b=20,l=40,r=20),
-            xaxis=dict(gridcolor='#1e2130',tickangle=45),yaxis=dict(gridcolor='#1e2130',tickformat='$,.0f'))
+        fig_ct.update_layout(paper_bgcolor='rgba(0,0,0,0)',plot_bgcolor='rgba(248,250,252,0.5)',
+            font=dict(color='#334155',size=11),margin=dict(t=10,b=20,l=40,r=20),
+            xaxis=dict(gridcolor='#e2e8f0',tickangle=45),yaxis=dict(gridcolor='#e2e8f0',tickformat='$,.0f'))
         st.plotly_chart(fig_ct,use_container_width=True)
 
 st.divider()
