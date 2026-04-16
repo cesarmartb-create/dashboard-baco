@@ -129,7 +129,7 @@ with st.sidebar:
         if comp_file:
             df_c = pd.read_excel(comp_file)
             df_c.columns = [c.strip() for c in df_c.columns]
-            df_c['Monto'] = pd.to_numeric(df_c['Monto'], errors='coerce').fillna(0)
+            df_c['monto'] = pd.to_numeric(df_c['monto'], errors='coerce').fillna(0)
             comp_sem = df_c.groupby(['Local','Semana','Año','Mes','Categoría']).agg(monto=('Monto','sum')).reset_index()
             comp_sem['fecha'] = fecha_carga.isoformat()
             if os.path.exists(HIST_COMP):
