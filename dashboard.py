@@ -13,21 +13,23 @@ st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap');
 html, body, [class*="css"] { font-family: 'DM Sans', sans-serif; }
-.kcard { background:#f8fafc; border-radius:10px; padding:1rem 1.2rem; border:0.5px solid #e2e8f0; }
+.kcard { background:#f8fafc; border-radius:10px; padding:1rem 1.2rem; border:0.5px solid #e2e8f0; margin-bottom:4px; }
 .klabel { font-size:11px; font-weight:500; letter-spacing:0.07em; text-transform:uppercase; color:#64748b; margin:0 0 6px; }
 .kval { font-size:26px; font-weight:600; color:#0f172a; font-family:'DM Mono',monospace; margin:0; }
-.ksub { font-size:12px; margin:4px 0 0; }
+.ksub { font-size:12px; margin:4px 0 0; color:#64748b; }
 .sec { font-size:11px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:#94a3b8; margin:1.5rem 0 0.75rem; }
 .tbl { width:100%; border-collapse:collapse; font-size:13px; }
 .tbl th { font-size:11px; font-weight:500; color:#94a3b8; text-align:left; padding:4px 10px 8px; border-bottom:1px solid #e2e8f0; }
 .tbl td { padding:8px 10px; border-bottom:0.5px solid #f1f5f9; color:#0f172a; }
 .tbl tr:last-child td { border-bottom:none; }
 .pill { display:inline-block; font-size:11px; font-weight:600; padding:3px 9px; border-radius:20px; }
-.n5 { background:#dcfce7; color:#15803d; }
-.n4 { background:#dbeafe; color:#1d4ed8; }
-.n3 { background:#fef9c3; color:#a16207; }
-.n2 { background:#fee2e2; color:#b91c1c; }
-.n1 { background:#fee2e2; color:#b91c1c; }
+.n5{background:#dcfce7;color:#15803d;} .n4{background:#dbeafe;color:#1d4ed8;}
+.n3{background:#fef9c3;color:#a16207;} .n2{background:#fee2e2;color:#b91c1c;}
+.n1{background:#fee2e2;color:#b91c1c;}
+.tag-pagada{background:#dcfce7;color:#15803d;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;}
+.tag-vencer{background:#fef9c3;color:#a16207;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;}
+.tag-vencida{background:#fee2e2;color:#b91c1c;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;}
+.tag-novenc{background:#dbeafe;color:#1d4ed8;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -42,6 +44,9 @@ NOMBRES = {
     'F0171':'PAC','F0234':'Metro Franklin','F0287':'Chillán 3','F0313':'Maipú 3',
     'F0383':'Rancagua 8','F0437':'Talagante 2','F0521':'Maipú Chacabuco'
 }
+
+MESES_ORD = {'enero':1,'febrero':2,'marzo':3,'abril':4,'mayo':5,'junio':6,
+             'julio':7,'agosto':8,'septiembre':9,'octubre':10,'noviembre':11,'diciembre':12}
 
 def nota_des(v):
     if v<=1.0: return 5
@@ -67,23 +72,33 @@ def nota_ticket(v):
 def pill(n):
     return f'<span class="pill n{n}">{n}</span>'
 
-def color_val(v, good_low=True):
+def nc(n, good_low=True):
     if good_low:
-        c = '#15803d' if v<=2 else '#1d4ed8' if v<=3 else '#a16207' if v<=4 else '#b91c1c'
+        return ['','#b91c1c','#b91c1c','#a16207','#1d4ed8','#15803d'][n]
     else:
-        c = '#15803d' if v>75 else '#1d4ed8' if v>70 else '#a16207' if v>65 else '#b91c1c'
-    return c
+        return ['','#b91c1c','#b91c1c','#a16207','#1d4ed8','#15803d'][n]
 
+PLOT_LAYOUT = dict(
+    paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(248,250,252,0.5)',
+    font=dict(color='#334155', size=11),
+    margin=dict(t=30,b=30,l=50,r=20),
+    xaxis=dict(gridcolor='#e2e8f0'),
+    yaxis=dict(gridcolor='#e2e8f0')
+)
+
+# ── SIDEBAR ───────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown("### Cargar datos")
     exist_file = st.file_uploader("Existencias (QlickView)", type="xlsx", key="dash_exist")
     des_file   = st.file_uploader("Desabasto (QlickView)",   type="xlsx", key="dash_des")
     vta_file   = st.file_uploader("Ventas (QlickView)",      type="xlsx", key="dash_vta")
-    comp_file  = st.file_uploader("Facturación Simi (.xlsx)", type="xlsx", key="dash_comp")
+    comp_file  = st.file_uploader("Facturación Simi (.xlsx)", type="xlsx", key="dash_comp",
+        help="Archivo con hoja REGISTRO — se carga completo, reemplaza historial de compras")
     fecha_carga = st.date_input("Fecha del período", value=date.today())
 
     if st.button("Guardar período", type="primary"):
         guardado = []
+
         if exist_file and des_file:
             df_ex = pd.read_excel(exist_file)
             df_ex.columns = [c.strip() for c in df_ex.columns]
@@ -143,13 +158,9 @@ with st.sidebar:
             df_c = pd.read_excel(comp_file, sheet_name='REGISTRO')
             df_c.columns = [c.strip() for c in df_c.columns]
             df_c['Monto'] = pd.to_numeric(df_c['Monto'], errors='coerce').fillna(0)
-            comp_sem = df_c.groupby(['Local','Semana','Año','Mes','Categoría']).agg(monto=('Monto','sum')).reset_index()
-            comp_sem['fecha'] = fecha_carga.isoformat()
-            if os.path.exists(HIST_COMP):
-                df_old = pd.read_csv(HIST_COMP)
-                df_old = df_old[df_old['fecha']!=fecha_carga.isoformat()]
-                comp_sem = pd.concat([df_old, comp_sem], ignore_index=True)
-            comp_sem.to_csv(HIST_COMP, index=False)
+            df_c['Fecha Documento'] = pd.to_datetime(df_c['Fecha Documento'], errors='coerce')
+            df_c['Fecha Vencimiento'] = pd.to_datetime(df_c['Fecha Vencimiento'], errors='coerce')
+            df_c.to_csv(HIST_COMP, index=False)
             guardado.append("compras")
 
         if guardado:
@@ -158,10 +169,12 @@ with st.sidebar:
         else:
             st.warning("Sube al menos un archivo para guardar")
 
+# ── CARGAR HISTORIAL ──────────────────────────────────────────────────────────
 df_inv  = pd.read_csv(HIST_INV)  if os.path.exists(HIST_INV)  else pd.DataFrame()
 df_vta  = pd.read_csv(HIST_VTA)  if os.path.exists(HIST_VTA)  else pd.DataFrame()
 df_comp = pd.read_csv(HIST_COMP) if os.path.exists(HIST_COMP) else pd.DataFrame()
 
+# ── HEADER ────────────────────────────────────────────────────────────────────
 col_h1, col_h2 = st.columns([3,1])
 with col_h1:
     st.markdown("## Dashboard Grupo Baco")
@@ -180,7 +193,9 @@ if not df_inv.empty:
     st.markdown('<p class="sec">KPIs inventario — último período</p>', unsafe_allow_html=True)
     df_ult = df_inv[df_inv['fecha']==df_inv['fecha'].max()].copy()
     for col in ['des_pct','cat_pct','val_inv','dias_inv']:
-        if col in df_ult.columns: df_ult[col] = pd.to_numeric(df_ult[col], errors='coerce').fillna(0)
+        if col in df_ult.columns:
+            df_ult[col] = pd.to_numeric(df_ult[col], errors='coerce').fillna(0)
+
     prom_des = df_ult['des_pct'].mean()
     prom_cat = df_ult['cat_pct'].mean()
     total_inv = df_ult['val_inv'].sum()
@@ -192,42 +207,38 @@ if not df_inv.empty:
     c1,c2,c3,c4 = st.columns(4)
     with c1:
         st.markdown(f"""<div class="kcard"><p class="klabel">Desabasto red</p>
-            <p class="kval" style="color:{color_val(nd_red)}">{prom_des:.2f}%</p>
+            <p class="kval" style="color:{nc(nd_red)}">{prom_des:.2f}%</p>
             <p class="ksub">{pill(nd_red)} meta ≤2.0% para nota 4</p></div>""", unsafe_allow_html=True)
     with c2:
         st.markdown(f"""<div class="kcard"><p class="klabel">Catálogo vendido red</p>
-            <p class="kval" style="color:{color_val(nc_red,False)}">{prom_cat:.1f}%</p>
+            <p class="kval" style="color:{nc(nc_red)}">{prom_cat:.1f}%</p>
             <p class="ksub">{pill(nc_red)} meta &gt;70% para nota 3</p></div>""", unsafe_allow_html=True)
     with c3:
         st.markdown(f"""<div class="kcard"><p class="klabel">Inventario total</p>
             <p class="kval">${total_inv/1e6:.0f}M</p>
-            <p class="ksub" style="color:#64748b">{len(df_ult)} locales activos</p></div>""", unsafe_allow_html=True)
+            <p class="ksub">{len(df_ult)} locales activos</p></div>""", unsafe_allow_html=True)
     with c4:
         st.markdown(f"""<div class="kcard"><p class="klabel">Rango desabasto</p>
             <p class="kval" style="font-size:18px;color:#15803d">{mejor['local']} {mejor['des_pct']:.2f}%</p>
             <p class="ksub" style="color:#b91c1c">peor: {peor['local']} {peor['des_pct']:.2f}%</p></div>""", unsafe_allow_html=True)
 
     st.markdown("")
-
-    # Tabla por local
     df_tbl = df_ult.copy()
     df_tbl['nombre'] = df_tbl['local'].map(NOMBRES).fillna(df_tbl['local'])
     df_tbl = df_tbl.sort_values('des_pct')
-
     rows_html = ""
     for _, r in df_tbl.iterrows():
-        nd, nc = nota_des(r['des_pct']), nota_cat(r['cat_pct'])
+        nd, ncat = nota_des(r['des_pct']), nota_cat(r['cat_pct'])
         dias_color = '#b91c1c' if r['dias_inv']>55 else '#a16207' if r['dias_inv']>35 else '#15803d'
         rows_html += f"""<tr>
             <td><strong>{r['local']}</strong><br><span style="color:#94a3b8;font-size:11px">{r['nombre']}</span></td>
-            <td>{r['des_pct']:.2f}%</td>
+            <td style="color:{nc(nd)};font-weight:500">{r['des_pct']:.2f}%</td>
             <td>{pill(nd)}</td>
-            <td>{r['cat_pct']:.1f}%</td>
-            <td>{pill(nc)}</td>
+            <td style="color:{nc(ncat)};font-weight:500">{r['cat_pct']:.1f}%</td>
+            <td>{pill(ncat)}</td>
             <td>${r['val_inv']/1e6:.1f}M</td>
             <td style="color:{dias_color};font-weight:500">{r['dias_inv']:.0f}d</td>
         </tr>"""
-
     st.markdown(f"""<table class="tbl">
         <thead><tr><th>Local</th><th>Desabasto</th><th>Nota</th><th>Catálogo</th><th>Nota</th><th>Inventario</th><th>Días inv.</th></tr></thead>
         <tbody>{rows_html}</tbody></table>""", unsafe_allow_html=True)
@@ -241,12 +252,8 @@ if not df_inv.empty:
         fig.add_trace(go.Scatter(x=df_trend['fecha'],y=df_trend['cat_pct'],name='Catálogo %',
             line=dict(color='#10b981',width=2,dash='dot'),mode='lines+markers'),secondary_y=True)
         fig.add_hline(y=2.0,line_dash="dash",line_color="#f59e0b",annotation_text="Meta nota 4",secondary_y=False)
-        fig.update_layout(height=240,paper_bgcolor='rgba(0,0,0,0)',plot_bgcolor='rgba(248,250,252,0.5)',
-            font=dict(color='#334155',size=11),legend=dict(orientation='h',y=1.1),
-            margin=dict(t=30,b=20,l=40,r=40),
-            xaxis=dict(gridcolor='#e2e8f0'),yaxis=dict(gridcolor='#e2e8f0'))
+        fig.update_layout(height=240,legend=dict(orientation='h',y=1.1),**PLOT_LAYOUT)
         st.plotly_chart(fig, use_container_width=True)
-
     st.divider()
 
 # ── VENTAS ────────────────────────────────────────────────────────────────────
@@ -272,99 +279,144 @@ if not df_vta.empty:
             <p class="kval">{int(tickets_total):,}</p></div>""", unsafe_allow_html=True)
     with vc3:
         st.markdown(f"""<div class="kcard"><p class="klabel">Ticket promedio red</p>
-            <p class="kval" style="color:{color_val(nt,False)}">${ticket_prom:,.0f}</p>
+            <p class="kval" style="color:{nc(nt)}">${ticket_prom:,.0f}</p>
             <p class="ksub">{pill(nt)} meta &gt;$9.501 nota 4</p></div>""", unsafe_allow_html=True)
     with vc4:
         st.markdown(f"""<div class="kcard"><p class="klabel">Piezas por ticket</p>
             <p class="kval">{piezas_ticket:.1f}</p></div>""", unsafe_allow_html=True)
 
     st.markdown("")
-    vta_local = df_v_ult.groupby('local').agg(venta=('venta','sum'),ticket_prom=('ticket_prom','mean')).reset_index()
-    vta_local['nombre'] = vta_local['local'].map(NOMBRES).fillna(vta_local['local'])
+    col_vt1, col_vt2 = st.columns([1,1])
+    with col_vt1:
+        vta_local = df_v_ult.groupby('local').agg(venta=('venta','sum'),ticket_prom=('ticket_prom','mean')).reset_index()
+        vta_local['nombre'] = vta_local['local'].map(NOMBRES).fillna(vta_local['local'])
+        vta_local = vta_local.sort_values('venta',ascending=True)
+        fig_vl = px.bar(vta_local,x='venta',y='nombre',orientation='h',height=320,
+            color='ticket_prom',color_continuous_scale=['#bfdbfe','#1d4ed8'],
+            labels={'venta':'','nombre':'','ticket_prom':'Ticket prom.'})
+        fig_vl.update_traces(texttemplate='$%{x:,.0f}',textposition='outside',textfont_size=10)
+        fig_vl.update_layout(coloraxis_colorbar=dict(title='Ticket',tickformat='$,.0f'),**PLOT_LAYOUT)
+        st.plotly_chart(fig_vl,use_container_width=True)
 
-    rows_vta = ""
-    for _, r in vta_local.sort_values('venta',ascending=False).iterrows():
-        nt_loc = nota_ticket(r['ticket_prom'])
-        rows_vta += f"""<tr>
-            <td><strong>{r['local']}</strong><br><span style="color:#94a3b8;font-size:11px">{r['nombre']}</span></td>
-            <td>${r['venta']/1e6:.1f}M</td>
-            <td>{int(r['venta']/venta_total*100)}%</td>
-            <td>${r['ticket_prom']:,.0f}</td>
-            <td>{pill(nt_loc)}</td>
-        </tr>"""
-    st.markdown(f"""<table class="tbl">
-        <thead><tr><th>Local</th><th>Venta</th><th>% red</th><th>Ticket prom.</th><th>Nota</th></tr></thead>
-        <tbody>{rows_vta}</tbody></table>""", unsafe_allow_html=True)
+    with col_vt2:
+        rows_vta = ""
+        for _, r in vta_local.sort_values('venta',ascending=False).iterrows():
+            nt_loc = nota_ticket(r['ticket_prom'])
+            rows_vta += f"""<tr>
+                <td><strong>{r['local']}</strong><br><span style="color:#94a3b8;font-size:11px">{r['nombre']}</span></td>
+                <td>${r['venta']/1e6:.1f}M</td>
+                <td>{int(r['venta']/venta_total*100)}%</td>
+                <td>${r['ticket_prom']:,.0f}</td>
+                <td>{pill(nt_loc)}</td>
+            </tr>"""
+        st.markdown(f"""<table class="tbl">
+            <thead><tr><th>Local</th><th>Venta</th><th>%</th><th>Ticket</th><th>Nota</th></tr></thead>
+            <tbody>{rows_vta}</tbody></table>""", unsafe_allow_html=True)
 
     if len(df_v['fecha'].unique())>1:
         st.markdown('<p class="sec">Tendencia ventas semanal</p>', unsafe_allow_html=True)
         df_vt = df_v.groupby(['fecha','semana']).agg(venta=('venta','sum')).reset_index()
         df_vt['periodo_sem'] = df_vt['fecha'].astype(str)+' S'+df_vt['semana'].astype(str)
         fig_vt = px.line(df_vt,x='periodo_sem',y='venta',height=200,
-            color_discrete_sequence=['#3b82f6'],labels={'venta':'Venta $','periodo_sem':''})
-        fig_vt.update_layout(paper_bgcolor='rgba(0,0,0,0)',plot_bgcolor='rgba(248,250,252,0.5)',
-            font=dict(color='#334155',size=11),margin=dict(t=10,b=20,l=40,r=20),
-            xaxis=dict(gridcolor='#e2e8f0',tickangle=45),yaxis=dict(gridcolor='#e2e8f0',tickformat='$,.0f'))
+            color_discrete_sequence=['#3b82f6'],labels={'venta':'','periodo_sem':''})
+        fig_vt.update_layout(**PLOT_LAYOUT,xaxis=dict(gridcolor='#e2e8f0',tickangle=45),
+            yaxis=dict(gridcolor='#e2e8f0',tickformat='$,.0f'))
         st.plotly_chart(fig_vt,use_container_width=True)
     st.divider()
 
 # ── COMPRAS ───────────────────────────────────────────────────────────────────
 if not df_comp.empty:
-    st.markdown('<p class="sec">Compras</p>', unsafe_allow_html=True)
+    st.markdown('<p class="sec">Compras y flujo de caja</p>', unsafe_allow_html=True)
     df_c = df_comp.copy()
-    df_c['monto'] = pd.to_numeric(df_c['monto'],errors='coerce').fillna(0)
-    df_c_ult = df_c[df_c['fecha']==df_c['fecha'].max()]
-    mercaderia   = df_c_ult[df_c_ult['Categoría']=='Mercadería']['monto'].sum()
-    bonificacion = abs(df_c_ult[df_c_ult['Categoría']=='Bonificación']['monto'].sum())
-    otros = df_c_ult[~df_c_ult['Categoría'].isin(['Mercadería','Bonificación'])]['monto'].sum()
-    compra_neta  = mercaderia - bonificacion + otros
-    ratio_bonif  = bonificacion/mercaderia*100 if mercaderia>0 else 0
-    venta_ult    = df_vta[df_vta['fecha']==df_vta['fecha'].max()]['venta'].sum() if not df_vta.empty else 0
-    ratio_cv     = compra_neta/venta_ult*100 if venta_ult>0 else 0
-    cv_color     = '#15803d' if ratio_cv<70 else '#a16207' if ratio_cv<85 else '#b91c1c'
+    df_c['Monto'] = pd.to_numeric(df_c['Monto'],errors='coerce').fillna(0)
+    df_c['Año']   = pd.to_numeric(df_c['Año'],   errors='coerce').fillna(0).astype(int)
+    df_c['Semana']= pd.to_numeric(df_c['Semana'],errors='coerce').fillna(0).astype(int)
+
+    # KPIs generales
+    merc_total    = df_c[df_c['Categoría']=='Mercadería']['Monto'].sum()
+    bonif_total   = abs(df_c[df_c['Categoría']=='Bonificación']['Monto'].sum())
+    compra_neta   = merc_total - bonif_total
+    ratio_bonif   = bonif_total/merc_total*100 if merc_total>0 else 0
+
+    # Pendientes de pago
+    pend = df_c[df_c['Estatus'].isin(['Por vencer','No vencido','Vencida'])]
+    vencido   = pend[pend['Estatus']=='Vencida']['Monto'].sum()
+    por_vencer= pend[pend['Estatus']=='Por vencer']['Monto'].sum()
+    no_vencido= pend[pend['Estatus']=='No vencido']['Monto'].sum()
+    total_pend= vencido + por_vencer + no_vencido
 
     cc1,cc2,cc3,cc4 = st.columns(4)
     with cc1:
-        st.markdown(f"""<div class="kcard"><p class="klabel">Compra bruta mercadería</p>
-            <p class="kval">${mercaderia/1e6:.1f}M</p></div>""", unsafe_allow_html=True)
+        st.markdown(f"""<div class="kcard"><p class="klabel">Compra neta mercadería</p>
+            <p class="kval">${compra_neta/1e6:.0f}M</p>
+            <p class="ksub">bonif. {ratio_bonif:.1f}% — ${bonif_total/1e6:.0f}M recibido</p></div>""", unsafe_allow_html=True)
     with cc2:
-        st.markdown(f"""<div class="kcard"><p class="klabel">Bonificaciones recibidas</p>
-            <p class="kval" style="color:#15803d">${bonificacion/1e6:.1f}M</p>
-            <p class="ksub" style="color:#15803d">{ratio_bonif:.1f}% de la compra bruta</p></div>""", unsafe_allow_html=True)
+        st.markdown(f"""<div class="kcard"><p class="klabel">Total por pagar</p>
+            <p class="kval" style="color:#b91c1c">${total_pend/1e6:.0f}M</p>
+            <p class="ksub">vencido + por vencer + no vencido</p></div>""", unsafe_allow_html=True)
     with cc3:
-        st.markdown(f"""<div class="kcard"><p class="klabel">Compra neta</p>
-            <p class="kval">${compra_neta/1e6:.1f}M</p></div>""", unsafe_allow_html=True)
+        st.markdown(f"""<div class="kcard"><p class="klabel">Vencido — urgente</p>
+            <p class="kval" style="color:#b91c1c">${vencido/1e6:.0f}M</p>
+            <p class="ksub" style="color:#b91c1c">requiere pago inmediato</p></div>""", unsafe_allow_html=True)
     with cc4:
-        st.markdown(f"""<div class="kcard"><p class="klabel">Ratio compra/venta</p>
-            <p class="kval" style="color:{cv_color}">{ratio_cv:.1f}%</p>
-            <p class="ksub" style="color:#64748b">meta &lt;70%</p></div>""", unsafe_allow_html=True)
+        st.markdown(f"""<div class="kcard"><p class="klabel">Por vencer pronto</p>
+            <p class="kval" style="color:#a16207">${por_vencer/1e6:.0f}M</p>
+            <p class="ksub">${no_vencido/1e6:.0f}M no vencido aún</p></div>""", unsafe_allow_html=True)
 
     st.markdown("")
-    comp_local = df_c_ult[df_c_ult['Categoría']=='Mercadería'].groupby('Local')['monto'].sum().reset_index()
-    comp_local['nombre'] = comp_local['Local'].map(NOMBRES).fillna(comp_local['Local'])
+    col_c1, col_c2 = st.columns([1,1])
 
-    rows_comp = ""
-    total_comp = comp_local['monto'].sum()
-    for _, r in comp_local.sort_values('monto',ascending=False).iterrows():
-        rows_comp += f"""<tr>
-            <td><strong>{r['Local']}</strong><br><span style="color:#94a3b8;font-size:11px">{r['nombre']}</span></td>
-            <td>${r['monto']/1e6:.1f}M</td>
-            <td>{int(r['monto']/total_comp*100)}%</td>
-        </tr>"""
-    st.markdown(f"""<table class="tbl">
-        <thead><tr><th>Local</th><th>Compra mercadería</th><th>% total</th></tr></thead>
-        <tbody>{rows_comp}</tbody></table>""", unsafe_allow_html=True)
+    with col_c1:
+        st.markdown('<p class="sec">Compra semanal mercadería (últimas 12 semanas)</p>', unsafe_allow_html=True)
+        merc_sem = df_c[df_c['Categoría']=='Mercadería'].groupby(['Año','Semana'])['Monto'].sum().reset_index()
+        merc_sem = merc_sem.sort_values(['Año','Semana']).tail(12)
+        merc_sem['periodo'] = merc_sem['Año'].astype(str) + ' S' + merc_sem['Semana'].astype(str)
+        fig_cs = px.bar(merc_sem,x='periodo',y='Monto',height=260,
+            color_discrete_sequence=['#7c3aed'],labels={'Monto':'','periodo':''})
+        fig_cs.update_traces(texttemplate='$%{y:,.0f}',textposition='outside',textfont_size=9)
+        fig_cs.update_layout(**PLOT_LAYOUT,xaxis=dict(gridcolor='#e2e8f0',tickangle=45),
+            yaxis=dict(gridcolor='#e2e8f0',tickformat='$,.0f'))
+        st.plotly_chart(fig_cs,use_container_width=True)
 
-    if len(df_c['fecha'].unique())>1:
-        st.markdown('<p class="sec">Tendencia compras semanal</p>', unsafe_allow_html=True)
-        df_ct = df_c[df_c['Categoría']=='Mercadería'].groupby(['fecha','Semana']).agg(monto=('monto','sum')).reset_index()
-        df_ct['periodo_sem'] = df_ct['fecha'].astype(str)+' S'+df_ct['Semana'].astype(str)
-        fig_ct = px.line(df_ct,x='periodo_sem',y='monto',height=200,
-            color_discrete_sequence=['#7c3aed'],labels={'monto':'Compra $','periodo_sem':''})
-        fig_ct.update_layout(paper_bgcolor='rgba(0,0,0,0)',plot_bgcolor='rgba(248,250,252,0.5)',
-            font=dict(color='#334155',size=11),margin=dict(t=10,b=20,l=40,r=20),
-            xaxis=dict(gridcolor='#e2e8f0',tickangle=45),yaxis=dict(gridcolor='#e2e8f0',tickformat='$,.0f'))
-        st.plotly_chart(fig_ct,use_container_width=True)
+    with col_c2:
+        st.markdown('<p class="sec">Estado de facturas pendientes</p>', unsafe_allow_html=True)
+        fig_est = go.Figure(go.Bar(
+            x=[vencido, por_vencer, no_vencido],
+            y=['Vencida','Por vencer','No vencido'],
+            orientation='h',
+            marker_color=['#ef4444','#f59e0b','#3b82f6'],
+            text=[f'${vencido/1e6:.0f}M',f'${por_vencer/1e6:.0f}M',f'${no_vencido/1e6:.0f}M'],
+            textposition='outside',textfont_size=11
+        ))
+        fig_est.update_layout(height=200,showlegend=False,**PLOT_LAYOUT)
+        st.plotly_chart(fig_est,use_container_width=True)
+
+        # Por categoria
+        st.markdown('<p class="sec">Por categoría (histórico)</p>', unsafe_allow_html=True)
+        cat_res = df_c.groupby('Categoría')['Monto'].sum().reset_index().sort_values('Monto',ascending=False)
+        rows_cat = ""
+        for _, r in cat_res.iterrows():
+            color = '#15803d' if r['Monto']<0 else '#0f172a'
+            rows_cat += f"<tr><td>{r['Categoría']}</td><td style='color:{color};font-weight:500;text-align:right'>${r['Monto']/1e6:.1f}M</td></tr>"
+        st.markdown(f"""<table class="tbl">
+            <thead><tr><th>Categoría</th><th style="text-align:right">Monto</th></tr></thead>
+            <tbody>{rows_cat}</tbody></table>""", unsafe_allow_html=True)
+
+    # Compra por local (últimas 4 semanas)
+    st.markdown('<p class="sec">Compra por local — últimas 4 semanas</p>', unsafe_allow_html=True)
+    ult_sem = merc_sem.tail(4)['Semana'].tolist()
+    ult_ano = merc_sem.tail(4)['Año'].tolist()
+    merc_local = df_c[
+        (df_c['Categoría']=='Mercadería') &
+        (df_c['Semana'].isin(ult_sem))
+    ].groupby('Local')['Monto'].sum().reset_index()
+    merc_local['nombre'] = merc_local['Local'].map(NOMBRES).fillna(merc_local['Local'])
+    merc_local = merc_local.sort_values('Monto',ascending=True)
+    fig_cl = px.bar(merc_local,x='Monto',y='nombre',orientation='h',height=300,
+        color_discrete_sequence=['#7c3aed'],labels={'Monto':'','nombre':''})
+    fig_cl.update_traces(texttemplate='$%{x:,.0f}',textposition='outside',textfont_size=10)
+    fig_cl.update_layout(**PLOT_LAYOUT)
+    st.plotly_chart(fig_cl,use_container_width=True)
 
 st.divider()
 st.caption("Grupo Baco — Dashboard de gestión v1.0")
