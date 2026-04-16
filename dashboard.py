@@ -17,9 +17,9 @@ st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
 html, body, [class*="css"] { font-family: 'DM Sans', sans-serif; }
-.metric-card { background: #0f1117; border: 1px solid #1e2130; border-radius: 12px; padding: 1.2rem 1.4rem; }
+.metric-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.2rem 1.4rem; }
 .metric-label { font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: #6b7280; margin-bottom: 6px; }
-.metric-value { font-size: 28px; font-weight: 600; color: #f9fafb; font-family: 'DM Mono', monospace; }
+.metric-value { font-size: 28px; font-weight: 600; color: #0f172a; font-family: 'DM Mono', monospace; }
 .metric-delta { font-size: 12px; margin-top: 4px; }
 .section-title { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #6b7280; margin-bottom: 12px; }
 </style>
