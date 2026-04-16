@@ -195,6 +195,8 @@ if df_inv.empty and df_vta.empty and df_comp.empty:
     st.info("Sube archivos desde el sidebar para comenzar.")
     st.stop()
 
+tab_inv, tab_vta, tab_comp = st.tabs(["📦 Inventario", "💰 Ventas", "🧾 Compras"])
+
 # ── INVENTARIO ────────────────────────────────────────────────────────────────
 if not df_inv.empty:
     st.markdown('<p class="sec">KPIs inventario — último período</p>', unsafe_allow_html=True)
