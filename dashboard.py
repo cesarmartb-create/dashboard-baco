@@ -173,6 +173,13 @@ with st.sidebar:
 df_inv  = pd.read_csv(HIST_INV)  if os.path.exists(HIST_INV)  else pd.DataFrame()
 df_vta  = pd.read_csv(HIST_VTA)  if os.path.exists(HIST_VTA)  else pd.DataFrame()
 df_comp = pd.read_csv(HIST_COMP) if os.path.exists(HIST_COMP) else pd.DataFrame()
+if not df_comp.empty:
+    df_comp.columns = [c.strip() for c in df_comp.columns]
+    # Normalizar columnas clave
+    for old_col, new_col in [('monto','Monto'),('categoría','Categoría'),('categoría ','Categoría'),
+                               ('estatus','Estatus'),('año','Año'),('semana','Semana'),('local','Local')]:
+        if old_col in df_comp.columns and new_col not in df_comp.columns:
+            df_comp = df_comp.rename(columns={old_col: new_col})
 
 # ── HEADER ────────────────────────────────────────────────────────────────────
 col_h1, col_h2 = st.columns([3,1])
