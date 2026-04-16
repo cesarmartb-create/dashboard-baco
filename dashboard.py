@@ -179,6 +179,8 @@ if df_inv.empty and df_vta.empty and df_comp.empty:
 if not df_inv.empty:
     st.markdown('<p class="sec">KPIs inventario — último período</p>', unsafe_allow_html=True)
     df_ult = df_inv[df_inv['fecha']==df_inv['fecha'].max()].copy()
+    for col in ['des_pct','cat_pct','val_inv','dias_inv']:
+        if col in df_ult.columns: df_ult[col] = pd.to_numeric(df_ult[col], errors='coerce').fillna(0)
     prom_des = df_ult['des_pct'].mean()
     prom_cat = df_ult['cat_pct'].mean()
     total_inv = df_ult['val_inv'].sum()
