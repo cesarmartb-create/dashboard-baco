@@ -326,8 +326,8 @@ if not df_vta.empty:
         df_vt['periodo_sem'] = df_vt['fecha'].astype(str)+' S'+df_vt['semana'].astype(str)
         fig_vt = px.line(df_vt,x='periodo_sem',y='venta',height=200,
             color_discrete_sequence=['#3b82f6'],labels={'venta':'','periodo_sem':''})
-        fig_vt.update_layout(**PLOT_LAYOUT,xaxis=dict(gridcolor='#e2e8f0',tickangle=45),
-            yaxis=dict(gridcolor='#e2e8f0',tickformat='$,.0f'))
+        fig_vt.update_layout(**{k:v for k,v in PLOT_LAYOUT.items() if k not in ['xaxis','yaxis']},
+            xaxis=dict(gridcolor='#e2e8f0',tickangle=45),yaxis=dict(gridcolor='#e2e8f0',tickformat='$,.0f'))
         st.plotly_chart(fig_vt,use_container_width=True)
     st.divider()
 
@@ -381,8 +381,8 @@ if not df_comp.empty:
         fig_cs = px.bar(merc_sem,x='periodo',y='Monto',height=260,
             color_discrete_sequence=['#7c3aed'],labels={'Monto':'','periodo':''})
         fig_cs.update_traces(texttemplate='$%{y:,.0f}',textposition='outside',textfont_size=9)
-        fig_cs.update_layout(**PLOT_LAYOUT,xaxis=dict(gridcolor='#e2e8f0',tickangle=45),
-            yaxis=dict(gridcolor='#e2e8f0',tickformat='$,.0f'))
+        fig_cs.update_layout(**{k:v for k,v in PLOT_LAYOUT.items() if k not in ['xaxis','yaxis']},
+            xaxis=dict(gridcolor='#e2e8f0',tickangle=45),yaxis=dict(gridcolor='#e2e8f0',tickformat='$,.0f'))
         st.plotly_chart(fig_cs,use_container_width=True)
 
     with col_c2:
